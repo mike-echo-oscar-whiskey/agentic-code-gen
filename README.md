@@ -16,13 +16,19 @@ killed it.
 ## Running it
 
 ```bash
-# Backend (terminal 1) — key lives in user secrets, never in the repo
+# One-time: API key into user secrets (never in the repo), frontend deps
 dotnet user-secrets set "Anthropic:ApiKey" "<key>" --project api/AgentCodeGen.Api
-dotnet run --project api/AgentCodeGen.Api          # http://localhost:5117
+cd web && npm install && cd ..
 
-# Frontend (terminal 2)
-cd web && npm install && npm start                 # http://localhost:4200 (proxies /api)
+# Start both (backend :5117, frontend :4200, logs + pidfiles in .run/)
+scripts/run.sh
+
+# Stop both
+scripts/stop.sh
 ```
+
+Or by hand: `dotnet run --project api/AgentCodeGen.Api` and `cd web && npm start`
+in two terminals — the frontend proxies `/api` to the backend.
 
 Without an API key the backend falls back to a stubbed workflow, so the full
 UI still demos end-to-end offline.
