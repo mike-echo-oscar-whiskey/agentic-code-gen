@@ -1,0 +1,89 @@
+.shell {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mark {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, var(--agent-coding), var(--accent));
+  box-shadow: 0 0 16px color-mix(in oklab, var(--accent) 45%, transparent);
+}
+
+h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tagline {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.tagline a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.tagline a:hover {
+  text-decoration: underline;
+}
+
+.error {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid color-mix(in oklab, var(--danger) 40%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--danger) 10%, transparent);
+  color: var(--danger);
+  font-size: 13.5px;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: minmax(300px, 2fr) 3fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.board-timeline {
+  position: sticky;
+  top: 24px;
+}
+
+.board-results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+
+  .board-timeline {
+    position: static;
+  }
+}

@@ -1,0 +1,29 @@
+<div class="shell">
+  <header class="masthead">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <h1>Data Code Generator</h1>
+    </div>
+    <p class="tagline">
+      A Coding Agent and a Review Agent collaborate on code for the
+      <a href="https://metmuseum.github.io/" target="_blank" rel="noopener">Met Museum Collection API</a>.
+    </p>
+  </header>
+
+  <app-goal-composer [busy]="run.isRunning()" (start)="run.start($event)" />
+
+  @if (run.error(); as error) {
+    <p class="error" role="alert">{{ error }}</p>
+  }
+
+  @if (run.hasStarted()) {
+    <div class="board">
+      <app-agent-timeline class="board-timeline" [events]="run.events()" [running]="run.isRunning()" />
+
+      <div class="board-results">
+        <app-code-panel [artifact]="run.code()" [pending]="run.isRunning()" />
+        <app-review-panel [review]="run.review()" [pending]="run.isRunning()" />
+      </div>
+    </div>
+  }
+</div>

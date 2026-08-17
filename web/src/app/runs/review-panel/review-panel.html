@@ -1,0 +1,30 @@
+<section class="panel">
+  <header class="panel-header">
+    <h2>Review</h2>
+    @if (review(); as result) {
+      <span class="verdict" [attr.data-verdict]="result.verdict">{{ result.verdict }}</span>
+    }
+  </header>
+
+  @if (review(); as result) {
+    @if (result.findings.length === 0) {
+      <p class="empty">The Review Agent had no findings.</p>
+    } @else {
+      <ul class="findings">
+        @for (finding of result.findings; track finding.issue) {
+          <li class="finding" [attr.data-severity]="finding.severity">
+            <span class="severity">{{ finding.severity }}</span>
+            <div class="finding-body">
+              <p class="issue">{{ finding.issue }}</p>
+              <p class="suggestion">{{ finding.suggestedChange }}</p>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  } @else if (pending()) {
+    <p class="empty">Waiting for the Review Agent…</p>
+  } @else {
+    <p class="empty">No review yet.</p>
+  }
+</section>

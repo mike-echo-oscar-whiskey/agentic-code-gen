@@ -1,0 +1,31 @@
+<section class="panel">
+  <header class="panel-header">
+    <h2>Agent activity</h2>
+    <span class="count">{{ events().length }} events</span>
+  </header>
+
+  @if (events().length === 0) {
+    <p class="empty">Waiting for the first agent to report in…</p>
+  } @else {
+    <ol class="timeline">
+      @for (agentEvent of events(); track agentEvent.sequence) {
+        <li class="entry" [attr.data-agent]="agentEvent.agent" [attr.data-kind]="agentEvent.kind">
+          <span
+            class="dot"
+            [class.dot-active]="running() && isLast(agentEvent)"
+            aria-hidden="true"
+          ></span>
+
+          <div class="entry-body">
+            <div class="entry-meta">
+              <span class="agent">{{ agentEvent.agent }}</span>
+              <span class="kind">{{ agentEvent.kind }}</span>
+              <span class="elapsed">{{ elapsed(agentEvent) }}</span>
+            </div>
+            <p class="message">{{ agentEvent.message }}</p>
+          </div>
+        </li>
+      }
+    </ol>
+  }
+</section>

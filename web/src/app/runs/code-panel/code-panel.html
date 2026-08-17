@@ -1,0 +1,53 @@
+<section class="panel">
+  <header class="panel-header">
+    <h2>Generated code</h2>
+    @if (artifact(); as code) {
+      <span class="lang">{{ code.language }}</span>
+      <button type="button" class="copy" (click)="copy(code.code)">
+        {{ copied() ? 'Copied' : 'Copy' }}
+      </button>
+    }
+  </header>
+
+  @if (artifact(); as code) {
+    <pre class="code"><code>{{ code.code }}</code></pre>
+
+    <div class="meta">
+      <div class="meta-block">
+        <h3>Why</h3>
+        <p>{{ code.explanation }}</p>
+      </div>
+
+      @if (code.dependencies.length > 0) {
+        <div class="meta-block">
+          <h3>Dependencies</h3>
+          <ul class="tags">
+            @for (dependency of code.dependencies; track dependency) {
+              <li class="tag">{{ dependency }}</li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (code.assumptions.length > 0) {
+        <div class="meta-block">
+          <h3>Assumptions</h3>
+          <ul class="bullets">
+            @for (assumption of code.assumptions; track assumption) {
+              <li>{{ assumption }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  } @else if (pending()) {
+    <div class="placeholder">
+      <span class="bar"></span>
+      <span class="bar bar-short"></span>
+      <span class="bar"></span>
+      <span class="bar bar-shorter"></span>
+    </div>
+  } @else {
+    <p class="empty">The Coding Agent has not produced anything yet.</p>
+  }
+</section>

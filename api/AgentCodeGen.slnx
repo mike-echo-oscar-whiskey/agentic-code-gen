@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AgentCodeGen.Api.Tests/AgentCodeGen.Api.Tests.csproj" />
+  <Project Path="AgentCodeGen.Api/AgentCodeGen.Api.csproj" />
+</Solution>

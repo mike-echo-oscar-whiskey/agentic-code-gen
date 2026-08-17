@@ -1,0 +1,37 @@
+<form class="composer" (submit)="$event.preventDefault(); submit()">
+  <label class="label" for="goal">What should the agents build?</label>
+
+  <div class="field">
+    <textarea
+      id="goal"
+      [formControl]="goal"
+      rows="3"
+      spellcheck="false"
+      placeholder="e.g. Generate a function that searches artworks by artist and returns title, date and image URL"
+    ></textarea>
+
+    <div class="field-footer">
+      <span class="counter" [class.counter-warn]="characterCount() > maxLength">
+        {{ characterCount() }} / {{ maxLength }}
+      </span>
+
+      <button type="submit" class="run" [disabled]="!canSubmit() || busy()">
+        @if (busy()) {
+          <span class="spinner" aria-hidden="true"></span>
+          Agents working
+        } @else {
+          Run agents
+        }
+      </button>
+    </div>
+  </div>
+
+  <div class="examples">
+    <span class="examples-label">Try</span>
+    @for (example of examples; track example) {
+      <button type="button" class="chip" (click)="use(example)" [disabled]="busy()">
+        {{ example }}
+      </button>
+    }
+  </div>
+</form>
