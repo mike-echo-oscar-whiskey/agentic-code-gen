@@ -12,7 +12,8 @@ public static class RunResponseMapper
             [.. run.Events.Select(ToResponse)],
             run.Code.Match(ToResponse, () => null),
             run.Review.Match(ToResponse, () => null),
-            [.. run.Gates.Select(g => new GateResultResponse(g.Name, g.Passed, g.Detail))]);
+            [.. run.Gates.Select(g => new GateResultResponse(g.Name, g.Passed, g.Detail))],
+            [.. run.History.Select(h => new RunIterationResponse(h.Number, ToResponse(h.Code)!, ToResponse(h.Review)!))]);
 
     public static AgentEventResponse ToResponse(this AgentEvent agentEvent) =>
         new(

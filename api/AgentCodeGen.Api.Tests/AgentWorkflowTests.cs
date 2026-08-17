@@ -125,6 +125,71 @@ public class AgentWorkflowTests
         snapshot.Gates.Should().ContainSingle(g => !g.Passed);
     }
 
+    private static readonly CodeArtifact RevisedCode = new(
+        "typescript", "export const fixed = 2;", [], "revised", []);
+
+    private static readonly ReviewResult ChangesRequested = new(
+        "changes-requested",
+        [new ReviewFinding(ReviewSeverity.Major, "No error handling", "Check response.ok")]);
+
+    [Fact]
+    public async Task RunAsync_WhenChangesAreRequested_RevisesOnceAndArchivesTheFirstAttempt()
+    {
+        _codingAgent.GenerateAsync(Goal, Arg.Any<CancellationToken>())
+            .Returns(Either<AgentError, CodeArtifact>.Right(Code));
+        _reviewAgent.ReviewAsync(Goal, Code, Arg.Any<CancellationToken>())
+            .Returns(Either<AgentError, ReviewResult>.Right(ChangesRequested));
+        _codingAgent.ReviseAsync(Goal, Code, ChangesRequested, Arg.Any<CancellationToken>())
+            .Returns(Either<AgentError, CodeArtifact>.Right(RevisedCode));
+        _reviewAgent.ReviewAsync(Goal, RevisedCode, Arg.Any<CancellationToken>())
+            .Returns(Either<AgentError, ReviewResult>.Right(Review));
+        var run = _store.Create(Goal);
+
+        await CreateWorkflow().RunAsync(run.Id, Goal);
+
+        var snapshot = Snapshot(run.Id);
+        snapshot.Status.Should().Be(RunStatus.Completed);
+        snapshot.Code.Match(c => c.Code, () => "").Should().Be(RevisedCode.Code);
+        snapshot.Review.Match(r => r.Verdict, () => "").Should().Be("approved");
+        snapshot.History.Should().ContainSingle();
+        snapshot.History[0].Code.Code.Should().Be(Code.Code);
+        snapshot.History[0].Review.Verdict.Should().Be("changes-requested");
+    }
+
+    [Fact]
+    public async Task RunAsync_RevisesAtMostOnce_EvenWhenTheReviewerStaysUnhappy()
+    {
+        _codingAgent.GenerateAsync(Goal, Arg.Any<CancellationToken>())
+            .Returns(Either<AgentError, CodeArtifact>.Right(Code));
+        _codingAgent.ReviseAsync(Goal, Arg.Any<CodeArtifact>(), Arg.Any<ReviewResult>(), Arg.Any<CancellationToken>())
+            .Returns(Either<AgentError, CodeArtifact>.Right(RevisedCode));
+        _reviewAgent.ReviewAsync(Goal, Arg.Any<CodeArtifact>(), Arg.Any<CancellationToken>())
+            .Returns(Either<AgentError, ReviewResult>.Right(ChangesRequested));
+        var run = _store.Create(Goal);
+
+        await CreateWorkflow().RunAsync(run.Id, Goal);
+
+        var snapshot = Snapshot(run.Id);
+        snapshot.Status.Should().Be(RunStatus.Completed);
+        snapshot.History.Should().ContainSingle();
+        snapshot.Review.Match(r => r.Verdict, () => "").Should().Be("changes-requested");
+        await _codingAgent.Received(1).ReviseAsync(
+            Goal, Arg.Any<CodeArtifact>(), Arg.Any<ReviewResult>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenApproved_DoesNotRevise()
+    {
+        StubSuccess();
+        var run = _store.Create(Goal);
+
+        await CreateWorkflow().RunAsync(run.Id, Goal);
+
+        Snapshot(run.Id).History.Should().BeEmpty();
+        await _codingAgent.DidNotReceiveWithAnyArgs()
+            .ReviseAsync(default!, default!, default!, default);
+    }
+
     private void StubSuccess()
     {
         _codingAgent.GenerateAsync(Goal, Arg.Any<CancellationToken>())

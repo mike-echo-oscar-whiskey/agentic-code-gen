@@ -9,4 +9,5 @@ public sealed record AgentRun(
     IReadOnlyList<AgentEvent> Events,
     Option<CodeArtifact> Code,
     Option<ReviewResult> Review,
-    IReadOnlyList<GateResult> Gates);
+    IReadOnlyList<GateResult> Gates,
+    IReadOnlyList<RunIteration> History);

@@ -89,6 +89,45 @@ public sealed class CodingAgent(IStructuredOutputClient client, IGroundingProvid
                 .Map(p => new CodeArtifact(p.Language, p.Code, p.Dependencies, p.Explanation, p.Assumptions)));
     }
 
+    public async Task<Either<AgentError, CodeArtifact>> ReviseAsync(
+        string goal,
+        CodeArtifact previous,
+        ReviewResult review,
+        CancellationToken cancellationToken = default)
+    {
+        var findings = string.Join("\n", review.Findings.Select(f =>
+            $"- [{f.Severity}] {f.Issue}\n  Suggested change: {f.SuggestedChange}"));
+
+        var request = new StructuredRequest(
+            SystemPrompt,
+            [
+                $"The goal is:\n\n{goal}",
+                $"""
+                Your previous attempt was reviewed and sent back. Previous code:
+
+                {previous.Code}
+                """,
+                $"""
+                Review findings to address (fix every major and blocking finding; apply minor
+                and info suggestions where they don't conflict with the goal):
+
+                {findings}
+
+                Emit the complete revised module — not a diff.
+                """
+            ],
+            ToolName,
+            ToolDescription,
+            ToolInputSchemaJson);
+
+        var response = await client.RequestAsync(request, cancellationToken);
+
+        return response.Match(
+            error => Either<AgentError, CodeArtifact>.Left(error),
+            payload => StructuredPayload.Deserialize<CodePayload>(payload)
+                .Map(p => new CodeArtifact(p.Language, p.Code, p.Dependencies, p.Explanation, p.Assumptions)));
+    }
+
     private sealed record CodePayload(
         string Language,
         string Code,

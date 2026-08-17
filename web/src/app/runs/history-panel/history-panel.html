@@ -1,0 +1,32 @@
+@if (history().length > 0) {
+  <section class="panel">
+    <header class="panel-header">
+      <h2>Revision history</h2>
+      <span class="count">{{ history().length }} superseded</span>
+    </header>
+
+    @for (iteration of history(); track iteration.number) {
+      <article class="iteration">
+        <div class="iteration-meta">
+          <span class="version">v{{ iteration.number }}</span>
+          <span class="verdict">{{ iteration.review.verdict }}</span>
+          <span class="note">sent back with {{ iteration.review.findings.length }} finding(s)</span>
+        </div>
+
+        <ul class="findings">
+          @for (finding of iteration.review.findings; track finding.issue) {
+            <li [attr.data-severity]="finding.severity">
+              <span class="severity">{{ finding.severity }}</span>
+              {{ finding.issue }}
+            </li>
+          }
+        </ul>
+
+        <details class="code-details">
+          <summary>Show v{{ iteration.number }} code</summary>
+          <pre class="code"><code>{{ iteration.code.code }}</code></pre>
+        </details>
+      </article>
+    }
+  </section>
+}

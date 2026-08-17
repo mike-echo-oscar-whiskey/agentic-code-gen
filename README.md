@@ -4,9 +4,14 @@ A user states a goal; a **Coding Agent** generates TypeScript against the
 [Met Museum Collection API](https://metmuseum.github.io/), a **Review Agent**
 critiques it, and the user watches both work in real time.
 
+When the review comes back `changes-requested`, the orchestrator feeds the
+findings to the Coding Agent for one revision round and the reviewer
+re-judges — the UI keeps the superseded version and the findings that
+killed it.
+
 - **Backend**: .NET 10 Minimal API, Anthropic Messages API (official C# SDK)
 - **Frontend**: Angular 22 (signals, strict TS), live agent timeline over SSE
-- **Tests**: 47 backend (xUnit + NSubstitute + AwesomeAssertions), 3 frontend (vitest)
+- **Tests**: 51 backend (xUnit + NSubstitute + AwesomeAssertions), 3 frontend (vitest)
 
 ## Running it
 
@@ -34,7 +39,8 @@ Angular ──POST /api/runs──────────▶ Minimal API
                                         ├─ CodingAgent ──▶ Anthropic (forced tool: emit_code)
                                         │      ▲ grounding: one real, trimmed Met /objects sample
                                         ├─ 4 validation gates (deterministic)
-                                        └─ ReviewAgent ──▶ Anthropic (forced tool: emit_review)
+                                        ├─ ReviewAgent ──▶ Anthropic (forced tool: emit_review)
+                                        └─ changes-requested? → revise (once) → gates → re-review
 ```
 
 `InMemoryRunStore` holds run state and fans events out to SSE subscribers via
@@ -85,6 +91,11 @@ interactive budget), `max_tokens` stop-reason handled, errors mapped to
 domain errors. Swapping vendors — or putting a cheaper model on the review
 step — is one file plus config.
 
+**The revise loop is bounded.** One revision round (`MaxRevisions = 1`).
+Convergence isn't guaranteed — a reviewer can keep finding minor issues
+forever, and each round costs two model calls. One round fixes the majors;
+beyond that, escalating to the human beats burning tokens.
+
 **Functional error handling.** Hand-rolled `Option<T>`/`Either<Error,T>` in
 the domain, matched away at the edges. Agent failures are values, not
 exceptions; the workflow fails fast and the timeline shows exactly which
@@ -105,13 +116,11 @@ Deterministic and probabilistic concerns are separated:
 
 ## What I'd do with more time
 
-1. **Revise loop** — feed review findings back to the Coding Agent for a v2
-   and show the diff (the schema and orchestration already support it).
-2. **`tsc --noEmit` gate** — compile the artifact; parse failures are
+1. **`tsc --noEmit` gate** — compile the artifact; parse failures are
    deterministic defects.
-3. **Persistence + run history** — the store interface is ready; swap
+2. **Persistence + run history** — the store interface is ready; swap
    in-memory for SQLite.
-4. **Resilience polish** — retry with jitter on 429/5xx only,
+3. **Resilience polish** — retry with jitter on 429/5xx only,
    circuit-breaker on the vendor client, token budgets per run.
-5. **Observability** — OpenTelemetry GenAI attributes (model, token usage,
+4. **Observability** — OpenTelemetry GenAI attributes (model, token usage,
    finish reason) per agent call; currently structured logs only.

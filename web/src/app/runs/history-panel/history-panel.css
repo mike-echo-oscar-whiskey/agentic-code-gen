@@ -1,0 +1,125 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.count {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.iteration {
+  padding: 14px 18px;
+}
+
+.iteration + .iteration {
+  border-top: 1px solid var(--border);
+}
+
+.iteration-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.version {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+}
+
+.verdict {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--agent-review);
+}
+
+.note {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.findings {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.findings li {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.severity {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--severity-color, var(--border-strong));
+  color: var(--severity-color, var(--text-faint));
+}
+
+li[data-severity='minor'] { --severity-color: var(--accent); }
+li[data-severity='major'] { --severity-color: var(--agent-review); }
+li[data-severity='blocking'] { --severity-color: var(--danger); }
+
+.code-details summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--text-faint);
+  user-select: none;
+}
+
+.code-details summary:hover {
+  color: var(--text-muted);
+}
+
+.code {
+  margin: 8px 0 0;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  background: #0d1119;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #aeb9cf;
+  tab-size: 2;
+}

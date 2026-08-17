@@ -32,6 +32,8 @@ public sealed class InMemoryRunStore(TimeProvider clock) : IRunStore
 
     public void SetGates(RunId id, IReadOnlyList<GateResult> gates) => Require(id).SetGates(gates);
 
+    public void ArchiveIteration(RunId id) => Require(id).ArchiveIteration();
+
     public void Finish(RunId id, RunStatus status) => Require(id).Finish(status);
 
     public async IAsyncEnumerable<AgentEvent> SubscribeAsync(
@@ -70,6 +72,7 @@ public sealed class InMemoryRunStore(TimeProvider clock) : IRunStore
         private Option<CodeArtifact> _code;
         private Option<ReviewResult> _review;
         private IReadOnlyList<GateResult> _gates = [];
+        private readonly List<RunIteration> _history = [];
 
         public RunId Id => id;
 
@@ -77,7 +80,7 @@ public sealed class InMemoryRunStore(TimeProvider clock) : IRunStore
         {
             lock (_gate)
             {
-                return new AgentRun(id, goal, _status, [.. _events], _code, _review, _gates);
+                return new AgentRun(id, goal, _status, [.. _events], _code, _review, _gates, [.. _history]);
             }
         }
 
@@ -120,6 +123,28 @@ public sealed class InMemoryRunStore(TimeProvider clock) : IRunStore
             lock (_gate)
             {
                 _gates = [.. gates];
+            }
+        }
+
+        public void ArchiveIteration()
+        {
+            lock (_gate)
+            {
+                var archived = _code.Match(
+                    code => _review.Match(
+                        review => new RunIteration(_history.Count + 1, code, review),
+                        () => null!),
+                    () => null!);
+
+                if (archived is null)
+                {
+                    throw new InvalidOperationException("Cannot archive an iteration without both code and review.");
+                }
+
+                _history.Add(archived);
+                _code = Option<CodeArtifact>.None;
+                _review = Option<ReviewResult>.None;
+                _gates = [];
             }
         }
 

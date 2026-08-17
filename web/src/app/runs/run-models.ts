@@ -39,6 +39,12 @@ export interface GateResult {
   readonly detail: string;
 }
 
+export interface RunIteration {
+  readonly number: number;
+  readonly code: CodeArtifact;
+  readonly review: Review;
+}
+
 export interface RunSnapshot {
   readonly id: string;
   readonly goal: string;
@@ -47,4 +53,5 @@ export interface RunSnapshot {
   readonly code: CodeArtifact | null;
   readonly review: Review | null;
   readonly gates: readonly GateResult[];
+  readonly history: readonly RunIteration[];
 }

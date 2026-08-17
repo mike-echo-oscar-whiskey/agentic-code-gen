@@ -2,6 +2,9 @@
   <header class="panel-header">
     <h2>Generated code</h2>
     @if (artifact(); as code) {
+      @if (version() > 1) {
+        <span class="version">v{{ version() }} · revised</span>
+      }
       <span class="lang">{{ code.language }}</span>
       <button type="button" class="copy" (click)="copy(code.code)">
         {{ copied() ? 'Copied' : 'Copy' }}

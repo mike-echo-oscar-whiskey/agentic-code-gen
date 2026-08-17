@@ -17,6 +17,9 @@ public interface IRunStore
 
     void SetGates(RunId id, IReadOnlyList<GateResult> gates);
 
+    /// Moves the current code + review into the history before a revision attempt.
+    void ArchiveIteration(RunId id);
+
     void Finish(RunId id, RunStatus status);
 
     IAsyncEnumerable<AgentEvent> SubscribeAsync(RunId id, CancellationToken cancellationToken = default);

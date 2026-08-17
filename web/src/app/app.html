@@ -21,9 +21,10 @@
       <app-agent-timeline class="board-timeline" [events]="run.events()" [running]="run.isRunning()" />
 
       <div class="board-results">
-        <app-code-panel [artifact]="run.code()" [pending]="run.isRunning()" />
+        <app-code-panel [artifact]="run.code()" [pending]="run.isRunning()" [version]="run.history().length + 1" />
         <app-gate-strip [gates]="run.gates()" />
         <app-review-panel [review]="run.review()" [pending]="run.isRunning()" />
+        <app-history-panel [history]="run.history()" />
       </div>
     </div>
   }

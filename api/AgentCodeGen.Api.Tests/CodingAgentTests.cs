@@ -121,6 +121,25 @@ public class CodingAgentTests
         result.Match(e => e.Message, _ => "").Should().Be("model unavailable");
     }
 
+    [Fact]
+    public async Task ReviseAsync_SendsPreviousCodeAndFindingsAndDemandsAFix()
+    {
+        StubResponse(ValidPayload);
+        var agent = CreateAgent();
+        var previous = new CodeArtifact("typescript", "export const broken = 1;", [], "why", []);
+        var review = new ReviewResult("changes-requested",
+            [new ReviewFinding(ReviewSeverity.Major, "No error handling", "Check response.ok")]);
+
+        var result = await agent.ReviseAsync(Goal, previous, review);
+
+        var request = CapturedRequest();
+        request.ToolName.Should().Be("emit_code");
+        request.UserMessages.Should().Contain(m => m.Contains(Goal));
+        request.UserMessages.Should().Contain(m => m.Contains("export const broken = 1;"));
+        request.UserMessages.Should().Contain(m => m.Contains("No error handling") && m.Contains("Check response.ok"));
+        result.IsRight.Should().BeTrue();
+    }
+
     private void StubResponse(string payload) =>
         _client.RequestAsync(Arg.Any<StructuredRequest>(), Arg.Any<CancellationToken>())
             .Returns(Either<AgentError, string>.Right(payload));

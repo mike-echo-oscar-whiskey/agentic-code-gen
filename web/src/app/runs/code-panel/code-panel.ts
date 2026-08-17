@@ -10,6 +10,7 @@ import { CodeArtifact } from '../run-models';
 export class CodePanel {
   readonly artifact = input<CodeArtifact | null>(null);
   readonly pending = input(false);
+  readonly version = input(1);
 
   protected readonly copied = signal(false);
 
