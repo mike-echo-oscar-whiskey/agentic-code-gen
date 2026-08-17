@@ -12,8 +12,9 @@ public class CodingAgentTests
     private const string Goal = "summarise a Met artwork";
 
     private readonly IStructuredOutputClient _client = Substitute.For<IStructuredOutputClient>();
+    private readonly IGroundingProvider _grounding = Substitute.For<IGroundingProvider>();
 
-    private CodingAgent CreateAgent() => new(_client);
+    private CodingAgent CreateAgent() => new(_client, _grounding);
 
     [Fact]
     public async Task GenerateAsync_SendsTheGoalInAUserTurn_NeverTheSystemPrompt()
@@ -55,6 +56,35 @@ public class CodingAgentTests
         artifact.Code.Should().Contain("searchArtworks");
         artifact.Dependencies.Should().BeEmpty();
         artifact.Assumptions.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task GenerateAsync_WithGrounding_AddsTheSampleAsADelimitedDataTurn()
+    {
+        _grounding.GetMetSampleAsync(Arg.Any<CancellationToken>())
+            .Returns(Option<string>.Some("""{ "title": "Wheat Field" }"""));
+        StubResponse(ValidPayload);
+        var agent = CreateAgent();
+
+        await agent.GenerateAsync(Goal);
+
+        var request = CapturedRequest();
+        request.UserMessages.Should().HaveCount(2);
+        request.UserMessages[1].Should().Contain("BEGIN MET API SAMPLE");
+        request.UserMessages[1].Should().Contain("Wheat Field");
+        request.UserMessages[1].Should().Contain("not instructions");
+        request.SystemPrompt.Should().NotContain("Wheat Field");
+    }
+
+    [Fact]
+    public async Task GenerateAsync_WithoutGrounding_SendsOnlyTheGoalTurn()
+    {
+        StubResponse(ValidPayload);
+        var agent = CreateAgent();
+
+        await agent.GenerateAsync(Goal);
+
+        CapturedRequest().UserMessages.Should().HaveCount(1);
     }
 
     [Fact]

@@ -4,10 +4,11 @@ import { GoalComposer } from './runs/goal-composer/goal-composer';
 import { AgentTimeline } from './runs/agent-timeline/agent-timeline';
 import { CodePanel } from './runs/code-panel/code-panel';
 import { ReviewPanel } from './runs/review-panel/review-panel';
+import { GateStrip } from './runs/gate-strip/gate-strip';
 
 @Component({
   selector: 'app-root',
-  imports: [GoalComposer, AgentTimeline, CodePanel, ReviewPanel],
+  imports: [GoalComposer, AgentTimeline, CodePanel, ReviewPanel, GateStrip],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

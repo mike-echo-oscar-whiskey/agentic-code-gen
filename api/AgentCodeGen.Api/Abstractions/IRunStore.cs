@@ -15,6 +15,8 @@ public interface IRunStore
 
     void SetReview(RunId id, ReviewResult review);
 
+    void SetGates(RunId id, IReadOnlyList<GateResult> gates);
+
     void Finish(RunId id, RunStatus status);
 
     IAsyncEnumerable<AgentEvent> SubscribeAsync(RunId id, CancellationToken cancellationToken = default);

@@ -22,7 +22,9 @@ public class AgentWorkflowTests
     private readonly ICodingAgent _codingAgent = Substitute.For<ICodingAgent>();
     private readonly IReviewAgent _reviewAgent = Substitute.For<IReviewAgent>();
 
-    private AgentWorkflow CreateWorkflow() => new(_store, _codingAgent, _reviewAgent);
+    private readonly List<ICodeGate> _gates = [];
+
+    private AgentWorkflow CreateWorkflow() => new(_store, _codingAgent, _reviewAgent, _gates);
 
     [Fact]
     public async Task RunAsync_OnTheHappyPath_CompletesWithCodeAndReview()
@@ -87,6 +89,40 @@ public class AgentWorkflowTests
         snapshot.Status.Should().Be(RunStatus.Failed);
         snapshot.Code.IsSome.Should().BeTrue();
         snapshot.Review.IsSome.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RunAsync_RunsTheGatesAndStoresTheirResults()
+    {
+        StubSuccess();
+        var gate = Substitute.For<ICodeGate>();
+        gate.CheckAsync(Code, Arg.Any<CancellationToken>())
+            .Returns(new GateResult("no-banned-constructs", true, "clean"));
+        _gates.Add(gate);
+        var run = _store.Create(Goal);
+
+        await CreateWorkflow().RunAsync(run.Id, Goal);
+
+        var snapshot = Snapshot(run.Id);
+        snapshot.Gates.Should().ContainSingle(g => g.Name == "no-banned-constructs" && g.Passed);
+        snapshot.Status.Should().Be(RunStatus.Completed);
+    }
+
+    [Fact]
+    public async Task RunAsync_AFailingGateDoesNotFailTheRun()
+    {
+        StubSuccess();
+        var gate = Substitute.For<ICodeGate>();
+        gate.CheckAsync(Code, Arg.Any<CancellationToken>())
+            .Returns(new GateResult("host-allowlist", false, "unknown host"));
+        _gates.Add(gate);
+        var run = _store.Create(Goal);
+
+        await CreateWorkflow().RunAsync(run.Id, Goal);
+
+        var snapshot = Snapshot(run.Id);
+        snapshot.Status.Should().Be(RunStatus.Completed);
+        snapshot.Gates.Should().ContainSingle(g => !g.Passed);
     }
 
     private void StubSuccess()

@@ -8,4 +8,5 @@ public sealed record AgentRun(
     RunStatus Status,
     IReadOnlyList<AgentEvent> Events,
     Option<CodeArtifact> Code,
-    Option<ReviewResult> Review);
+    Option<ReviewResult> Review,
+    IReadOnlyList<GateResult> Gates);

@@ -6,4 +6,5 @@ public sealed record RunSnapshotResponse(
     string Status,
     IReadOnlyList<AgentEventResponse> Events,
     CodeArtifactResponse? Code,
-    ReviewResponse? Review);
+    ReviewResponse? Review,
+    IReadOnlyList<GateResultResponse> Gates);

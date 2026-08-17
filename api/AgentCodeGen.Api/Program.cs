@@ -1,6 +1,7 @@
 using AgentCodeGen.Api.Abstractions;
 using AgentCodeGen.Api.Agents;
 using AgentCodeGen.Api.Endpoints;
+using AgentCodeGen.Api.Gates;
 using AgentCodeGen.Api.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,13 @@ else
 {
     builder.Services.Configure<AnthropicOptions>(builder.Configuration.GetSection(AnthropicOptions.SectionName));
     builder.Services.AddSingleton<IStructuredOutputClient, AnthropicStructuredOutputClient>();
+    builder.Services.AddHttpClient<IGroundingProvider, MetSampleProvider>(c => c.Timeout = TimeSpan.FromSeconds(10));
+    builder.Services.AddHttpClient<IPackageRegistry, NpmPackageRegistry>(c => c.Timeout = TimeSpan.FromSeconds(10));
+    builder.Services.AddSingleton<ICodeGate, BannedConstructsGate>();
+    builder.Services.AddSingleton<ICodeGate, SecretScanGate>();
+    builder.Services.AddSingleton<ICodeGate, HostAllowlistGate>();
+    builder.Services.AddSingleton<ICodeGate>(sp =>
+        new DependencyGate(sp.GetRequiredService<IPackageRegistry>()));
     builder.Services.AddSingleton<ICodingAgent, CodingAgent>();
     builder.Services.AddSingleton<IReviewAgent, ReviewAgent>();
     builder.Services.AddSingleton<IAgentWorkflow, AgentWorkflow>();

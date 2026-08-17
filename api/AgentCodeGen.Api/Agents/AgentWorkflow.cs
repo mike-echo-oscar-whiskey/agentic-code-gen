@@ -6,7 +6,8 @@ namespace AgentCodeGen.Api.Agents;
 public sealed class AgentWorkflow(
     IRunStore store,
     ICodingAgent codingAgent,
-    IReviewAgent reviewAgent) : IAgentWorkflow
+    IReviewAgent reviewAgent,
+    IEnumerable<ICodeGate> gates) : IAgentWorkflow
 {
     public async Task RunAsync(RunId runId, string goal, CancellationToken cancellationToken = default)
     {
@@ -34,6 +35,8 @@ public sealed class AgentWorkflow(
             return;
         }
 
+        await RunGatesAsync(runId, code, cancellationToken);
+
         store.Publish(runId, AgentKind.Review, AgentEventKind.Started, "Reviewing the generated code against the goal");
         var reviewed = await reviewAgent.ReviewAsync(goal, code, cancellationToken);
 
@@ -59,6 +62,34 @@ public sealed class AgentWorkflow(
 
         store.Publish(runId, AgentKind.Orchestrator, AgentEventKind.Completed, "Run completed");
         store.Finish(runId, RunStatus.Completed);
+    }
+
+    // Deterministic checks on the artifact: banned constructs, secret-shaped
+    // literals, host allowlist, and dependency resolution against the real npm
+    // registry. Informational — the Review Agent and the user see the results.
+    private async Task RunGatesAsync(RunId runId, CodeArtifact code, CancellationToken cancellationToken)
+    {
+        var gateList = gates.ToList();
+        if (gateList.Count == 0)
+        {
+            return;
+        }
+
+        store.Publish(runId, AgentKind.Orchestrator, AgentEventKind.Progress, "Running validation gates on the generated code");
+
+        var results = new List<GateResult>();
+        foreach (var gate in gateList)
+        {
+            results.Add(await gate.CheckAsync(code, cancellationToken));
+        }
+
+        store.SetGates(runId, results);
+
+        var failed = results.Count(r => !r.Passed);
+        store.Publish(runId, AgentKind.Orchestrator, AgentEventKind.Progress,
+            failed == 0
+                ? $"All {results.Count} validation gates passed"
+                : $"{failed} of {results.Count} validation gates failed");
     }
 
     private void Fail(RunId runId)

@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { AgentEvent, CodeArtifact, Review, RunSnapshot, RunStatus } from './run-models';
+import { AgentEvent, CodeArtifact, GateResult, Review, RunSnapshot, RunStatus } from './run-models';
 
 type ClientStatus = 'idle' | RunStatus;
 
@@ -15,6 +15,7 @@ export class RunClient {
   readonly events = signal<readonly AgentEvent[]>([]);
   readonly code = signal<CodeArtifact | null>(null);
   readonly review = signal<Review | null>(null);
+  readonly gates = signal<readonly GateResult[]>([]);
   readonly error = signal<string | null>(null);
 
   readonly isRunning = computed(() => this.status() === 'running');
@@ -26,6 +27,7 @@ export class RunClient {
     this.events.set([]);
     this.code.set(null);
     this.review.set(null);
+    this.gates.set([]);
     this.error.set(null);
     this.status.set('running');
 
@@ -74,6 +76,7 @@ export class RunClient {
       );
       this.code.set(snapshot.code);
       this.review.set(snapshot.review);
+      this.gates.set(snapshot.gates);
       this.status.set(snapshot.status);
     } catch {
       this.error.set('The run finished but its result could not be loaded.');

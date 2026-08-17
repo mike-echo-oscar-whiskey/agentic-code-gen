@@ -11,7 +11,8 @@ public static class RunResponseMapper
             Lower(run.Status),
             [.. run.Events.Select(ToResponse)],
             run.Code.Match(ToResponse, () => null),
-            run.Review.Match(ToResponse, () => null));
+            run.Review.Match(ToResponse, () => null),
+            [.. run.Gates.Select(g => new GateResultResponse(g.Name, g.Passed, g.Detail))]);
 
     public static AgentEventResponse ToResponse(this AgentEvent agentEvent) =>
         new(

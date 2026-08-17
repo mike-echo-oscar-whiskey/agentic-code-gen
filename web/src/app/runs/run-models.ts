@@ -33,6 +33,12 @@ export interface Review {
   readonly findings: readonly ReviewFinding[];
 }
 
+export interface GateResult {
+  readonly name: string;
+  readonly passed: boolean;
+  readonly detail: string;
+}
+
 export interface RunSnapshot {
   readonly id: string;
   readonly goal: string;
@@ -40,4 +46,5 @@ export interface RunSnapshot {
   readonly events: readonly AgentEvent[];
   readonly code: CodeArtifact | null;
   readonly review: Review | null;
+  readonly gates: readonly GateResult[];
 }

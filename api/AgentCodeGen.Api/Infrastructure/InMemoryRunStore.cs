@@ -30,6 +30,8 @@ public sealed class InMemoryRunStore(TimeProvider clock) : IRunStore
 
     public void SetReview(RunId id, ReviewResult review) => Require(id).SetReview(review);
 
+    public void SetGates(RunId id, IReadOnlyList<GateResult> gates) => Require(id).SetGates(gates);
+
     public void Finish(RunId id, RunStatus status) => Require(id).Finish(status);
 
     public async IAsyncEnumerable<AgentEvent> SubscribeAsync(
@@ -67,6 +69,7 @@ public sealed class InMemoryRunStore(TimeProvider clock) : IRunStore
         private RunStatus _status = RunStatus.Running;
         private Option<CodeArtifact> _code;
         private Option<ReviewResult> _review;
+        private IReadOnlyList<GateResult> _gates = [];
 
         public RunId Id => id;
 
@@ -74,7 +77,7 @@ public sealed class InMemoryRunStore(TimeProvider clock) : IRunStore
         {
             lock (_gate)
             {
-                return new AgentRun(id, goal, _status, [.. _events], _code, _review);
+                return new AgentRun(id, goal, _status, [.. _events], _code, _review, _gates);
             }
         }
 
@@ -109,6 +112,14 @@ public sealed class InMemoryRunStore(TimeProvider clock) : IRunStore
             lock (_gate)
             {
                 _review = Option<ReviewResult>.Some(review);
+            }
+        }
+
+        public void SetGates(IReadOnlyList<GateResult> gates)
+        {
+            lock (_gate)
+            {
+                _gates = [.. gates];
             }
         }
 

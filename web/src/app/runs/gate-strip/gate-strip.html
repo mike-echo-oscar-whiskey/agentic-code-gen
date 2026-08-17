@@ -1,0 +1,11 @@
+@if (gates().length > 0) {
+  <section class="strip" aria-label="Validation gates">
+    <span class="label">Gates</span>
+    @for (gate of gates(); track gate.name) {
+      <span class="gate" [class.gate-failed]="!gate.passed" [title]="gate.detail">
+        <span class="mark" aria-hidden="true">{{ gate.passed ? '✓' : '✕' }}</span>
+        {{ gate.name }}
+      </span>
+    }
+  </section>
+}
